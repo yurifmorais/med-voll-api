@@ -20,6 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @GetMapping
     public String olaMundo(){
-        return "Ola mundo spring!";
+        return "Ola mundo spring 2023!";
     }
 }

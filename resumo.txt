@@ -1,0 +1,17 @@
+o spring nao precisa de DAO, pois ele simplifica usando interfaces;
+
+//Devolver e receber entidades JPA no Controller eh errado. o DTO existe para que isso nao seja necessario;
+
+//entidade JPA: é uma classe que representa um objeto persistente mapeado para uma tabela de banco de dados. pode ter comportamento e regras de negócio;
+//dto: é uma classe que representa um conjunto de dados para transferir entre diferentes componentes ou sistemas. não tem comportamento nem regras de negócio, apenas armazena e recupera dados;
+
+// um record eh como uma classe normal, mas sem getter e setter. pois assim fica menos verboso. eh imutavel;
+
+//as interfaces respository substituem as classes DAO. sao utilizadas para salvar os dados no bd.
+
+
+SOBRE O BD:
+- as migrations fazem o controle de versao do BD. No springboot a biblioteca que faz isso 'e o FLYWAY;
+- Sempre que eu for mexer com migrations, devo parar a execucao o projeto;
+- os arquivos de migrations seguem um padrao de nome, tem que cuidar isso;
+- migrations executadas nao podem ser modificadas. devo criar uma nova migration

@@ -7,51 +7,55 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
+//ResponseEntity eh uma boa pratica para retornar os codigos corretos; ex: codigo 201 = created (usado no POST);
 
 @RestController
-@RequestMapping("medicos")//essa e a url inicial
+@RequestMapping("medicos")//url inicial
 public class MedicoController {
-    @Autowired //o @ indica que o proprio spring que vai instanciar. injecao de dependencias
+    @Autowired //injecao de dependencias
     private MedicoRepository repository;
+
     @PostMapping
     @Transactional //quando tem INSERT, tem que ter o Transactional
-    //o @Valid abaixo serve para ele aplicar as validacoes do bean validation
-    public void cadastrar(@RequestBody @Valid DadosCadastroMedico dados){ //nao posso esquecer do @RequestBody, pois o metodo tem que puxar do corpo da requisicao;
-        //eu passo os parametros que vem pelo json na requisicao e ai salva no BD;
-        repository.save(new Medico(dados)); //o id 'e null pq o banco gera automaticamente. a classe q esta sendo chamada e a MedicoRepository;
-        //o save 'e como se fosse um INSERT no bd.
+    //@Valid aplica as validacoes do bean validation
+    //@RequestBody puxa os dados do corpo da requisicao;
+    public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados, UriComponentsBuilder uriBuilder) {
+        var medico = new Medico(dados);
+        repository.save(medico); //o save eh como se fosse um INSERT no bd
+        var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(medico.getId()).toUri();
+        return ResponseEntity.created(uri).body(new DadosDetalhamentoMedico(medico));
     }
 
     @GetMapping
-    //o READ do crud
-    //cuidar o retorno do metodo, pois retorna Page
-    public Page<DadosListagemMedico> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao){//Pageable serve para fazer a paginacao. ex: mostrar somente 10 por pagina
-        return repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new); //vai pegar so os que tem ativo = true
+    //Pageable serve para fazer a paginacao. ex: mostrar somente 10 por pagina
+    public ResponseEntity<Page<DadosListagemMedico>> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
+        var page = repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new); //pega somente os que tem ativo = true
+        return ResponseEntity.ok(page);
     }
 
-    @PutMapping //update
+    @PutMapping
     @Transactional
-    public void atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados){
+    public ResponseEntity atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados) {
         var medico = repository.getReferenceById(dados.id());
         medico.atualizarInformacoes(dados);
+        return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
     }
 
-    //vou receber o ID do medico a ser excluido na URL
-    @DeleteMapping("/{id}")//parametro dinamico
+    @DeleteMapping("/{id}")//o ID eh recebido como parametro dinamico, vem pela URL
     @Transactional
-    public void excluir(@PathVariable Long id){//para dizer que 'e o parametro que vem da URL (caminho/path)
+    public ResponseEntity excluir(@PathVariable Long id) {//@PathVariable serve para dizer que é o parametro que vem da URL
         var medico = repository.getReferenceById(id);
         medico.excluir();
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity detalhar(@PathVariable Long id) {
+        var medico = repository.getReferenceById(id);
+        return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
     }
 }
-
-
-
-
-
-
-
-
